@@ -32,3 +32,4 @@ class Blog(models.Model):
         verbose_name = '블로그'
         verbose_name_plural = '블로그 목록'
 
+
