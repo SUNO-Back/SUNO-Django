@@ -1,4 +1,7 @@
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
 
 # 블로그에 필요한 것들?
 # 1. 제목
@@ -20,6 +23,10 @@ class Blog(models.Model):
     category = models.CharField('카테고리', max_length=10, choices=CATEGORY_CHOICES)
     title = models.CharField('제목',max_length=100)
     content = models.TextField('본문')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    # models.CASCADE => 같이 삭제
+    # models.PROTECT => 삭제가 불가능함 ( 유저를 삭제하려고 할때 블로그가 있으면 유저 삭제가 불가능)
+    # models.SET_NULL => 유저 삭제시 블로그의 author가 NULL이 됩니다. 예시) on_delete=models.SET_NULL, null=True 이렇게 null값을 true로 넣어야 함
 
     created_at=models.DateTimeField('생성일자',auto_now_add=True)
     updated_at=models.DateTimeField('수정일자',auto_now=True)
