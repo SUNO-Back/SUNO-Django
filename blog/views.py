@@ -18,7 +18,6 @@ def blog_list(request):
         blogs = blogs.filter(
             Q(title__icontains=q) |
             Q(content__icontains=q)
-
         )
         # blogs = blogs.filter(content__icontains=q)
 
@@ -31,8 +30,8 @@ def blog_list(request):
     # request.session['count'] = request.session.get('count',0) + 1
 
     context = {
-        # 'blogs': blogs,
-        'page_object': page_object,
+        'object_list': page_object.object_list,
+        'page_obj': page_object,
     }
     return render(request, 'blog_list.html', context)
 
@@ -63,6 +62,7 @@ def blog_update(request, pk):
     blog = get_object_or_404(Blog, pk=pk, author=request.user)
     # if request.user != blog.author:
     #     raise Http404                 => author=request.user 이 부분인거임. 글쓴이가 진짜 글쓴이가 맞는지.
+    #                                      이걸 @login_required()로 대체함
 
     form = BlogForm(request.POST or None, instance=blog)
     if form.is_valid():

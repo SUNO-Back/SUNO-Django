@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -20,7 +21,7 @@ class Blog(models.Model):
         ('dog','강아지'),
     )
 
-    category = models.CharField('카테고리', max_length=10, choices=CATEGORY_CHOICES)
+    category = models.CharField('카테고리', max_length=10, choices=CATEGORY_CHOICES, default='free')
     title = models.CharField('제목',max_length=100)
     content = models.TextField('본문')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -35,8 +36,12 @@ class Blog(models.Model):
         return f'[{self.get_category_display()}] {self.title[:10]}]'
                   # get_category_display() choices=CATEGORY_CHOICES 이처럼 choices쓴거에만 사용 가능
                   # get_컬럼명_display() 이러면 저 위에 앞에 free가 아닌 자유가 화면에 보임
+    def get_absolute_url(self):
+        return reverse('blog:detail', kwargs={'pk': self.pk})
+
     class Meta:
         verbose_name = '블로그'
         verbose_name_plural = '블로그 목록'
 
-
+    # category update (terminal)
+    # BLog.objects.filter(category='').update(category='free')
