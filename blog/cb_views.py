@@ -4,10 +4,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import HttpResponseRedirect, Http404
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from blog.models import Blog
+from blog.forms import BlogForm, CommentForm
+from blog.models import Blog, Comment
 
 
 class BlogListView(ListView):
@@ -28,11 +30,19 @@ class BlogListView(ListView):
             )
         return queryset
 
-class BlogDetailView(DetailView):
-    model = Blog
+class BlogDetailView(ListView):
+    model = Comment
+    # queryset = Blog.objects.all().prefetch_related('comment_set', 'comment_set__author')
     template_name = 'blog_detail.html'
-
+    paginate_by = 10
     # pk_url_kwarg = 'id'   => 고유 값 즉 pk의 이름이 pk가 아닐때 이런식으로 지정해주고 클래스 안에서  id로 사용 하면 됨
+    def get(self, request, *args, **kwargs):
+        self.object = get_object_or_404(Blog, pk=kwargs.get('blog_pk'))
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.filter(blog=self.object).prefetch_related('author')
+
 
     # def get_queryset(self):
     #     queryset = super().get_queryset()
@@ -45,14 +55,36 @@ class BlogDetailView(DetailView):
     #
     #     return object
 
-    # def get_context_data(self, **kwargs):
-    #     context = super(BlogDetailView, self).get_context_data(**kwargs)
-    #     context['test'] = 'CBV'
-    #     return context
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        context['blog'] = self.object
+        return context
+
+    def post(self, *args, **kwargs):
+        comment_form = CommentForm(self.request.POST)
+
+        if not comment_form.is_valid():
+            self.object = self.get_object()
+            context = self.get_context_data(object=self.object)
+            context['comment_form'] = comment_form
+            return self.render_to_response(context)
+
+        if not self.request.user.is_authenticated:
+            raise Http404
+
+        comment = comment_form.save(commit=False)
+        # comment.blog = self.get_object()
+        comment.blog_id = self.kwargs['blog_pk']
+        comment.author = self.request.user
+        comment.save()
+
+        return HttpResponseRedirect(reverse_lazy('blog:detail', kwargs={'blog_pk': self.kwargs['blog_pk']}))
+
 
 class BlogCreateView(LoginRequiredMixin,CreateView):
     model = Blog
-    template_name = 'blog_create.html'
+    template_name = 'blog_form.html'
     fields = ('category','title', 'content')
     # success_url = reverse_lazy('cb_blog_detail', kwargs={'pk': self.object.pk})
     # 이게 여기에 있으면 호출될때마다 또 불러와져서 효율적이지 않음. 그래서 새 def로 만들어줌
@@ -66,9 +98,15 @@ class BlogCreateView(LoginRequiredMixin,CreateView):
     # def get_success_url(self):
     #     return reverse_lazy('cb_blog_detail', kwargs={'pk': self.object.pk})
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sub_title'] = '작성'
+        context['btn_name'] = '생성'
+        return context
+
 class BlogUpdateView(LoginRequiredMixin,UpdateView):
     model = Blog
-    template_name = 'blog_update.html'
+    template_name = 'blog_form.html'
     fields = ('category','title', 'content')
 
     # def get_success_url(self):
@@ -89,6 +127,12 @@ class BlogUpdateView(LoginRequiredMixin,UpdateView):
     #     if self.object.author != self.request.user:
     #         raise Http404
     #     return self.object
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sub_title'] = '수정'
+        context['btn_name'] = '수정'
+        return context
 
 class BlogDeleteView(LoginRequiredMixin,DeleteView):
     model = Blog

@@ -13,6 +13,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='blog',
             name='category',
-            field=models.CharField(choices=[('free', '자유'), ('travel', '여행'), ('cat', '고양이'), ('dog', '강아지')], default='free', max_length=10, verbose_name='카테고리'),
+            field=models.CharField(
+                choices=[('free', '자유'), ('travel', '여행'), ('cat', '고양이'), ('dog', '강아지')],
+                default='free',
+                max_length=10,
+                verbose_name='카테고리'),
         ),
     ]
