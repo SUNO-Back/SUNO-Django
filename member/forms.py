@@ -1,0 +1,39 @@
+from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
+
+User = get_user_model()
+
+
+class SignUpForm(UserCreationForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        class_update_fields = ('password1', 'password2')
+        # class_defualt_fields = ('password1', 'password2') 이렇게 사용해도 됨
+
+        for field in class_update_fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'
+            self.fields[field].widget.attrs['placeholder'] = 'password'
+            if field == 'password1':
+                self.fields[field].label = '비밀번호'
+            else:
+                self.fields[field].label = '비밀번호 확인'
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ('email', 'nickname',)
+        labels = {
+            'email' : '이메일',
+            'nickname' : '닉네임'
+        }
+        widgets = {
+            'email' : forms.EmailInput(
+                attrs={
+                    'placeholder' : 'example@example.com',
+                    'class' : 'form-control',
+                }
+            ),
+            'nickname' : forms.TextInput(attrs={'placeholder' : '닉네임','class' : 'form-control',})
+        }
