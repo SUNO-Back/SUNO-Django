@@ -85,7 +85,7 @@ class BlogDetailView(ListView):
 class BlogCreateView(LoginRequiredMixin,CreateView):
     model = Blog
     template_name = 'blog_form.html'
-    fields = ('category','title', 'content')
+    form_class = BlogForm
     # success_url = reverse_lazy('cb_blog_detail', kwargs={'pk': self.object.pk})
     # 이게 여기에 있으면 호출될때마다 또 불러와져서 효율적이지 않음. 그래서 새 def로 만들어줌
 
@@ -107,7 +107,7 @@ class BlogCreateView(LoginRequiredMixin,CreateView):
 class BlogUpdateView(LoginRequiredMixin,UpdateView):
     model = Blog
     template_name = 'blog_form.html'
-    fields = ('category','title', 'content')
+    form_class = BlogForm
 
     # def get_success_url(self):
     #     return reverse_lazy('cb_blog_detail', kwargs={'pk': self.object.pk})
@@ -127,6 +127,10 @@ class BlogUpdateView(LoginRequiredMixin,UpdateView):
     #     if self.object.author != self.request.user:
     #         raise Http404
     #     return self.object
+
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
