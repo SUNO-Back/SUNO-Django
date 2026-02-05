@@ -10,18 +10,24 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+import json
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+with open(BASE_DIR / '.config_secret' / 'secret.json') as f:
+    config_secret_str = f.read()
+
+
+SECRET = json.loads(config_secret_str)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!z)0b137e2xw4gekh_m=52v1b!wzixo@i!sp+@jtu$%4-_+l*0'
+SECRET_KEY = SECRET['DJANGO_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -132,5 +138,14 @@ STATIC_ROOT = BASE_DIR / '.static_root'
 # Auth
 AUTH_USER_MODEL = 'member.User'
 
-EMAIL_HOST_USER = 'email@email.com'
-EMAIL_HOST_PASSWORD = 'abcd'
+# from django.core.mail.backends.smtp import EmailBackend
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.naver.com'
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_PORT = 465
+EMAIL_HOST_USER = SECRET["email"]["user"]
+EMAIL_HOST_PASSWORD = SECRET["email"]["password"]
+
+LOGIN_URL = '/login/'

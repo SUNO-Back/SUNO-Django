@@ -1,9 +1,9 @@
 from django import forms
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.forms import UserCreationForm
 
-User = get_user_model()
 
+User = get_user_model()
 
 class SignUpForm(UserCreationForm):
 
@@ -37,3 +37,49 @@ class SignUpForm(UserCreationForm):
             ),
             'nickname' : forms.TextInput(attrs={'placeholder' : '닉네임','class' : 'form-control',})
         }
+
+class LoginForm(forms.Form):
+    email = forms.CharField(
+        label='이메일',
+        required=True,
+        widget=forms.EmailInput(attrs={'placeholder' : 'example@example.com','class' : 'form-control',}))
+    password = forms.CharField(
+        label='패스워드',
+        required=True,
+        widget=forms.PasswordInput(attrs={'placeholder' : 'password','class' : 'form-control',}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = None
+
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get('email')
+        password = cleaned_data.get('password')
+
+        self.user = authenticate(email=email, password=password)
+
+        if not self.user.is_active:
+            raise forms.ValidationError('유저가 인증되지 않았습니다.')
+        return cleaned_data
+
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     email = cleaned_data.get('email')
+    #     password = cleaned_data.get('password')
+    #
+    #     if not email or not password:
+    #         return cleaned_data
+    #
+    #     # ✅ 핵심: username에 email 넣어서 인증 (USERNAME_FIELD=email이면 이렇게 동작함)
+    #     user = authenticate(username=email, password=password)
+    #
+    #     if user is None:
+    #         raise forms.ValidationError('이메일 또는 비밀번호가 올바르지 않습니다.')
+    #
+    #     if not user.is_active:
+    #         raise forms.ValidationError('유저가 인증되지 않았습니다.')
+    #
+    #     self.user = user
+    #     return cleaned_data
